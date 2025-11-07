@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Workflow Example - GraphStorage</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Workflow Example";
+        var mkdocs_page_input_path = "FullExample.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GraphStorage
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Get_Started/">Get Started</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Workflow Example</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#example-data-files">Example Data Files</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#nodespgdf">nodes.pgdf</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#edgespgdf">edges.pgdf</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#code-example">Code example</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../FullDoc/">Documentation</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GraphStorage</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Workflow Example</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="workflow-example">Workflow example</h1>
+<p>This example demonstrates the complete workflow: ingesting data, running various queries, and fetching metadata.</p>
+<h2 id="example-data-files">Example Data Files</h2>
+<p>First, let's assume you have two files, nodes.pgdf and edges.pgdf, in your project's root directory. The ingestor expects these files to be in the .pgdf format.</p>
+<h3 id="nodespgdf">nodes.pgdf</h3>
+<pre><code class="language-txt">@id|@label|name|country
+user_101|User|Ana|Mexico
+user_102|User|Bob|USA
+user_103|User|Pedro|Chile
+</code></pre>
+<h3 id="edgespgdf">edges.pgdf</h3>
+<pre><code class="language-text">@id|@label|@dir|@out|@in|weight
+edge_50|KNOWS|T|user_101|user_102|0.8
+edge_51|WORKS_WITH|T|user_103|user_101|0.2
+</code></pre>
+<h2 id="code-example">Code example</h2>
+<p>This single Java class performs all operations on the data defined above.</p>
+<pre><code class="language-java">import com.gdblab.graphstorage.GraphStorage;
+import com.gdblab.graphstorage.storage.EdgeBlob;
+import com.gdblab.graphstorage.storage.NodeBlob;
+import com.gdblab.graphstorage.storage.Utils.GraphStorageException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+public class FullDemo {
+
+    public static void main(String[] args) {
+        Path dbPath = Paths.get(&quot;./my-graph-db&quot;);
+
+        try (GraphStorage db = GraphStorage.open(dbPath)) {
+            System.out.println(&quot;Database opened successfully at: &quot; + dbPath.toAbsolutePath());
+
+            // INGEST DATA
+            // This only needs to be run once.
+            // You can comment this out after the first successful run.
+            System.out.println(&quot;\n--- Ingesting Data ---&quot;);
+            try {
+                db.insertNodesByFile(&quot;nodes.pgdf&quot;);
+                db.insertEdgesByFile(&quot;edges.pgdf&quot;);
+                System.out.println(&quot;Ingestion complete.&quot;);
+            } catch (GraphStorageException e) {
+                System.err.println(&quot;Ingestion failed: &quot; + e.getMessage());
+            }
+
+            // SINGLE ENTITY QUERY (BY ID)
+            System.out.println(&quot;\n--- Query 1: Get Node 'user_101' ---&quot;);
+            try {
+                NodeBlob node = db.getNode(&quot;user_101&quot;);
+                if (node != null) {
+                    System.out.println(&quot;Found node. Label: &quot; + node.label);
+                    System.out.println(&quot;Property 'name': &quot; + node.props.get(&quot;name&quot;));
+                    System.out.println(&quot;Property 'country': &quot; + node.props.get(&quot;country&quot;));
+                } else {
+                    System.out.println(&quot;Node with ID 'user_101' not found.&quot;);
+                }
+            } catch (GraphStorageException e) {
+                e.printStackTrace();
+            }
+
+            // ITERATOR QUERY (BY PROPERTY)
+            // Note: This must be in a try-with-resources block
+            System.out.println(&quot;\n--- Query 2: Find Nodes where 'country'='Chile' ---&quot;);
+            try (var nodes = db.getNodesByPropertyEquals(&quot;country&quot;, &quot;Chile&quot;)) {
+                for (var nodeEntry : nodes) {
+                    NodeBlob blob = nodeEntry.blob();
+                    System.out.println(&quot;  - Found Node ID: &quot; + nodeEntry.id());
+                    System.out.println(&quot;    Label: &quot; + blob.label);
+                    System.out.println(&quot;    Name: &quot; + blob.props.get(&quot;name&quot;));
+                }
+            } catch (GraphStorageException e) {
+                e.printStackTrace();
+            }
+
+            // ITERATOR QUERY (NEIGHBORS)
+            // This also MUST be in a try-with-resources block
+            System.out.println(&quot;\n--- Query 3: Get Neighbors of 'user_101' ---&quot;);
+            try (var neighbors = db.getNeighbours(&quot;user_101&quot;)) {
+                for (var edgeEntry : neighbors) {
+                    EdgeBlob blob = edgeEntry.blob();
+                    System.out.println(&quot;  - Found Edge ID: &quot; + edgeEntry.id());
+                    System.out.println(&quot;    Label: &quot; + blob.label);
+                    System.out.println(
+                        String.format(&quot;    %s --[%s]--&gt; %s&quot;, blob.src, blob.label, blob.dst)
+                    );
+                }
+            } catch (GraphStorageException e) {
+                e.printStackTrace();
+            }
+
+            //  METADATA QUERIES
+            System.out.println(&quot;\n--- Query 4: Graph Metadata ---&quot;);
+            try {
+                long nodeCount = db.getNodesQuantity();
+                long edgeCount = db.getEdgesQuantity();
+
+                System.out.println(&quot;Total Nodes: &quot; + nodeCount);
+                System.out.println(&quot;Total Edges: &quot; + edgeCount);
+
+                var edgesByLabel = db.getEdgesQuantityByLabel();
+                System.out.println(&quot;Edge Counts by Label:&quot;);
+                edgesByLabel.forEach((label, count) -&gt; {
+                    System.out.println(&quot;  - &quot; + label + &quot;: &quot; + count);
+                });
+
+            } catch (GraphStorageException e) {
+                e.printStackTrace();
+            }
+
+        } catch (GraphStorageException e) {
+            System.err.println(&quot;A critical error occurred with the database:&quot;);
+            e.printStackTrace();
+        }
+    }
+}
+
+</code></pre>
+<p>you should get in your terminal: </p>
+<pre><code class="language-text">Database opened successfully at: /home/user/your_project/my-graph-db
+
+--- Ingesting Data ---
+Ingestion complete.
+
+--- Query 1: Get Node 'user_101' ---
+Found node. Label: User
+Property 'name': Ana
+Property 'country': Mexico
+
+--- Query 2: Find Nodes where 'country'='Chile' ---
+  - Found Node ID: user_103
+    Label: User
+    Name: Pedro
+
+--- Query 3: Get Neighbors of 'user_101' ---
+  - Found Edge ID: edge_50
+    Label: KNOWS
+    user_101 --[KNOWS]--&gt; user_102
+  - Found Edge ID: edge_51
+    Label: WORKS_WITH
+    user_103 --[WORKS_WITH]--&gt; user_101
+
+--- Query 4: Graph Metadata ---
+Total Nodes: 3
+Total Edges: 2
+Edge Counts by Label:
+  - KNOWS: 1
+  - WORKS_WITH: 1
+
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../Get_Started/" class="btn btn-neutral float-left" title="Get Started"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../FullDoc/" class="btn btn-neutral float-right" title="Documentation">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../Get_Started/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../FullDoc/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

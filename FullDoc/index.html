@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Documentation - GraphStorage</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Documentation";
+        var mkdocs_page_input_path = "FullDoc.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GraphStorage
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Get_Started/">Get Started</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../FullExample/">Workflow Example</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Documentation</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#lifecycle-instantiation">Lifecycle &amp; Instantiation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#ingestion-api">Ingestion API</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#single-entity-queries">Single Entity Queries</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#iterator-queries">Iterator Queries</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#metadata-queries">Metadata Queries</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GraphStorage</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Documentation</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="graphstorage-api-reference">GraphStorage API Reference</h1>
+<p>This document provides a detailed reference for the public API of the GraphStorage class.</p>
+<h2 id="lifecycle-instantiation">Lifecycle &amp; Instantiation</h2>
+<p>Methods for creating, opening, and closing a database instance.</p>
+<p><code>public static GraphStorage open(Path dbPath)</code></p>
+<p>Opens or creates a new database at the specified file system path. This is the main entry point for the library.</p>
+<ul>
+<li>
+<p>Parameters: <code>dbPath</code>, the <code>java.nio.file.Path</code> to the directory where the database will be stored.</p>
+</li>
+<li>
+<p>Returns: A new <code>GraphStorage</code> instance, ready for use.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>, If an error occurs while opening or creating the database (e.g., I/O error or RocksDB-level issue).</p>
+</li>
+</ul>
+<pre><code class="language-java">import java.nio.file.Paths;
+
+try (GraphStorage db = GraphStorage.open(Paths.get(&quot;./my-graph-db&quot;))) {
+    // Use the database instance
+    System.out.println(&quot;Database is open.&quot;);
+} catch (GraphStorageException e) {
+    e.printStackTrace();
+}
+</code></pre>
+<p><code>public void close()</code></p>
+<p>Closes the database connection and releases all underlying resources (including file handles and RocksDB instances).</p>
+<p>This method is part of the <code>AutoCloseable</code> interface and is called automatically when you use a try-with-resources block, which is the recommended practice.</p>
+<ul>
+<li>
+<p>Parameters: None.</p>
+</li>
+<li>
+<p>Returns: void.</p>
+</li>
+</ul>
+<h2 id="ingestion-api">Ingestion API</h2>
+<p>Methods for bulk-loading data into the database, currently you can only use <code>.pgdf</code> files</p>
+<p><code>public void insertNodesByFile(String filepath)</code></p>
+<p>Performs a bulk ingestion of nodes from a specified data file.</p>
+<ul>
+<li>
+<p>Parameters: <code>filepath</code>, A String representing the path to the node data file.</p>
+</li>
+<li>
+<p>Returns: void.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>: If the file cannot be read or a database error occurs during ingestion.</p>
+</li>
+</ul>
+<pre><code class="language-java">try (GraphStorage db = GraphStorage.open(Paths.get(&quot;./my-graph-db&quot;))) {
+    db.insertNodesByFile(&quot;path/to/my_nodes.pgdf&quot;);
+}
+</code></pre>
+<p><code>public void insertEdgesByFile(String filepath)</code></p>
+<p>Performs a bulk ingestion of edges from a specified data file.</p>
+<ul>
+<li>
+<p>Parameters: <code>filepath</code>, A String representing the path to the edge data file.</p>
+</li>
+<li>
+<p>Returns: void.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>, If the file cannot be read or a database error occurs during ingestion.</p>
+</li>
+</ul>
+<pre><code class="language-java">try (GraphStorage db = GraphStorage.open(Paths.get(&quot;./my-graph-db&quot;))) {
+    db.insertEdgesByFile(&quot;path/to/my_edges.pgdf&quot;);
+}
+</code></pre>
+<h2 id="single-entity-queries">Single Entity Queries</h2>
+<p>Methods for retrieving a single, specific entity by its unique ID.</p>
+<p><code>public NodeBlob getNode(String nodeId)</code></p>
+<p>Retrieves a single node and its data given its unique ID.</p>
+<ul>
+<li>
+<p>Parameters: <code>nodeId</code>, The unique ID of the node to retrieve.</p>
+</li>
+<li>
+<p>Returns: A <code>NodeBlob</code> object containing the node's label and properties, or null if no node with that ID is found.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>, If a database read error occurs.</p>
+</li>
+</ul>
+<pre><code class="language-java">NodeBlob node = db.getNode(&quot;user_123&quot;);
+if (node != null) {
+    System.out.println(&quot;Label: &quot; + node.label);
+    System.out.println(&quot;Name: &quot; + node.props.get(&quot;name&quot;));
+}
+</code></pre>
+<p><code>public EdgeBlob getEdge(String edgeId)</code></p>
+<p>Retrieves a single edge and its data given its unique ID.</p>
+<ul>
+<li>
+<p>Parameters: <code>edgeId</code>, The unique ID of the edge to retrieve.</p>
+</li>
+<li>
+<p>Returns: An <code>EdgeBlob</code> object containing the edge's label, source/target IDs, and properties, or null if no edge with that ID is found.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>, If a database read error occurs.</p>
+</li>
+</ul>
+<pre><code class="language-java">EdgeBlob edge = db.getEdge(&quot;rel_456&quot;);
+if (edge != null) {
+    System.out.println(&quot;Label: &quot; + edge.label);
+    System.out.println(edge.src + &quot; -&gt; &quot; + edge.dst);
+}
+</code></pre>
+<h2 id="iterator-queries">Iterator Queries</h2>
+<p>Methods for querying multiple entities. These methods return lazy iterators for high performance and low memory usage.</p>
+<p>Important: Always Close Iterators</p>
+<p>All methods in this section return an <code>AutoCloseableIterable</code>. You must use them in a try-with-resources block to prevent resource leaks.</p>
+<p><code>public AutoCloseableIterable&lt;NodeEntry&gt; getNodeIterator()</code></p>
+<p>Returns a lazy iterator over all nodes in the database.</p>
+<ul>
+<li>
+<p>Parameters: None.</p>
+</li>
+<li>
+<p>Returns: <code>AutoCloseableIterable&lt;GraphQueries.NodeEntry&gt;</code>.</p>
+</li>
+</ul>
+<pre><code class="language-java">    try (var nodes = db.getNodeIterator()) {
+    for (var nodeEntry : nodes) {
+        System.out.println(&quot;ID: &quot; + nodeEntry.id() + &quot;, Label: &quot; + nodeEntry.blob().label);
+    }
+
+}
+</code></pre>
+<p><code>public AutoCloseableIterable&lt;EdgeEntry&gt; getEdgeIterator()</code></p>
+<p>Returns a lazy iterator over all edges in the database.</p>
+<ul>
+<li>
+<p>Parameters: None.</p>
+</li>
+<li>
+<p>Returns: An <code>AutoCloseableIterable&lt;GraphQueries.EdgeEntry&gt;</code>.</p>
+</li>
+</ul>
+<pre><code class="language-java">try (var edges = db.getEdgeIterator()) {
+    for (var edgeEntry : edges) {
+        System.out.println(&quot;ID: &quot; + edgeEntry.id() + &quot;, Label: &quot; + edgeEntry.blob().label);
+    }
+}
+
+</code></pre>
+<p><code>public AutoCloseableIterable&lt;EdgeEntry&gt; getEdgeIteratorByLabel(String label)</code></p>
+<p>Returns a lazy iterator over all edges that have a specific label.</p>
+<ul>
+<li>
+<p>Parameters: <code>label</code>, The exact edge label to filter by (e.g., "KNOWS").</p>
+</li>
+<li>
+<p>Returns: An <code>AutoCloseableIterable&lt;GraphQueries.EdgeEntry&gt;</code>.</p>
+</li>
+</ul>
+<pre><code class="language-java">try (var edges = db.getEdgeIteratorByLabel(&quot;KNOWS&quot;)) {
+    for (var edgeEntry : edges) {
+        EdgeBlob edge = edgeEntry.blob();
+        System.out.println(edge.src + &quot; KNOWS &quot; + edge.dst);
+    }
+}
+</code></pre>
+<p><code>public AutoCloseableIterable&lt;EdgeEntry&gt; getNeighbours(String nodeId)</code></p>
+<p>Returns a lazy iterator over all neighboring edges (both incoming and outgoing) for a specific node.</p>
+<ul>
+<li>
+<p>Parameters: <code>nodeId</code>, The unique ID of the central node.</p>
+</li>
+<li>
+<p>Returns: An <code>AutoCloseableIterable&lt;GraphQueries.EdgeEntry&gt;</code>.</p>
+</li>
+</ul>
+<pre><code class="language-java">try (var neighbors = db.getNeighbours(&quot;user_123&quot;)) {
+    for (var edgeEntry : neighbors) {
+        System.out.println(&quot;Found neighboring edge: &quot; + edgeEntry.id());
+    }
+}
+</code></pre>
+<p><code>public AutoCloseableIterable&lt;NodeEntry&gt; getNodesByPropertyEquals(String propName, String propValue)</code></p>
+<p>Returns a lazy iterator over all nodes that have a specific property key matching a specific value.</p>
+<ul>
+<li>
+<p>Parameters: <code>propName</code>, The name of the property (e.g., "city"). <code>propValue</code>, The exact value to match (e.g., "London").</p>
+</li>
+<li>
+<p>Returns: An <code>AutoCloseableIterable&lt;GraphQueries.NodeEntry&gt;</code>.</p>
+</li>
+</ul>
+<pre><code class="language-java">try (var nodes = db.getNodesByPropertyEquals(&quot;city&quot;, &quot;London&quot;)) {
+    for (var nodeEntry : nodes) {
+        System.out.println(&quot;Found node: &quot; + nodeEntry.id());
+    }
+}
+</code></pre>
+<p><code>public AutoCloseableIterable&lt;EdgeEntry&gt; getEdgesByPropertyEquals(String propName, String propValue)</code></p>
+<p>Returns a lazy iterator over all edges that have a specific property key matching a specific value.</p>
+<ul>
+<li>
+<p>Parameters: <code>propName</code>, The name of the property (e.g., "weight"). <code>propValue</code>: The exact value to match (e.g., "10.5").</p>
+</li>
+<li>
+<p>Returns: An <code>AutoCloseableIterable&lt;GraphQueries.EdgeEntry&gt;</code>.</p>
+</li>
+</ul>
+<pre><code class="language-java">try (var edges = db.getEdgesByPropertyEquals(&quot;weight&quot;, &quot;10.5&quot;)) {
+    for (var edgeEntry : edges) {
+        System.out.println(&quot;Found edge: &quot; + edgeEntry.id());
+    }
+}
+</code></pre>
+<h2 id="metadata-queries">Metadata Queries</h2>
+<p>Methods for retrieving metadata, counts, and schema information about the graph.</p>
+<p><code>public long getNodesQuantity()</code></p>
+<p>Gets the total number of nodes in the database.</p>
+<ul>
+<li>
+<p>Parameters: None.</p>
+</li>
+<li>
+<p>Returns: A long representing the total node count.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>, If a database read error occurs.</p>
+</li>
+</ul>
+<pre><code class="language-java">    long nodeCount = db.getNodesQuantity();
+    System.out.println(&quot;Total nodes: &quot; + nodeCount);
+</code></pre>
+<p><code>public long getEdgesQuantity()</code></p>
+<p>Gets the total number of edges in the database.</p>
+<ul>
+<li>
+<p>Parameters: None.</p>
+</li>
+<li>
+<p>Returns: A long representing the total edge count.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>, If a database read error occurs.</p>
+</li>
+</ul>
+<pre><code class="language-java">    long edgeCount = db.getEdgesQuantity();
+    System.out.println(&quot;Total edges: &quot; + edgeCount);
+</code></pre>
+<p><code>public Map&lt;String, Long&gt; getEdgesQuantityByLabel()</code></p>
+<p>Gets the total number of edges, grouped by their label.</p>
+<ul>
+<li>
+<p>Parameters: None.</p>
+</li>
+<li>
+<p>Returns: A <code>Map&lt;String, Long&gt;</code> where the key is the label and the value is the count.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>: If a database read error occurs.</p>
+</li>
+</ul>
+<pre><code class="language-java">Map&lt;String, Long&gt; counts = db.getEdgesQuantityByLabel();
+for (var entry : counts.entrySet()) {
+    System.out.println(&quot;Label '&quot; + entry.getKey() + &quot;': &quot; + entry.getValue() + &quot; edges&quot;);
+}
+</code></pre>
+<p><code>public Map&lt;String, Set&lt;String&gt;&gt; getNodesStructure()</code></p>
+<p>Retrieves the detected "schema" of the nodes. It returns a map where each key is a node label, and the value is a set of all property keys found on nodes with that label.</p>
+<ul>
+<li>
+<p>Parameters: None.</p>
+</li>
+<li>
+<p>Returns: <code>Map&lt;String, Set&lt;String&gt;&gt; (Map&lt;Label, Set&lt;PropertyKey&gt;&gt;)</code>.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>: If a database read error occurs.</p>
+</li>
+</ul>
+<pre><code class="language-java">Map&lt;String, Set&lt;String&gt;&gt; nodeSchema = db.getNodesStructure();
+// E.g., prints: &quot;Label 'User': [name, age, email]&quot;
+nodeSchema.forEach((label, props) -&gt; {
+    System.out.println(&quot;Label '&quot; + label + &quot;': &quot; + props);
+});
+</code></pre>
+<p><code>public Map&lt;String, Set&lt;String&gt;&gt; getEdgesStructure()</code></p>
+<p>Retrieves the detected "schema" of the edges. It returns a map where each key is an edge label, and the value is a set of all property keys found on edges with that label.</p>
+<ul>
+<li>
+<p>Parameters: None.</p>
+</li>
+<li>
+<p>Returns: <code>Map&lt;String, Set&lt;String&gt;&gt; (Map&lt;Label, Set&lt;PropertyKey&gt;&gt;)</code>.</p>
+</li>
+<li>
+<p>Throws: <code>GraphStorageException</code>: If a database read error occurs.</p>
+</li>
+</ul>
+<pre><code class="language-java">
+Map&lt;String, Set&lt;String&gt;&gt; edgeSchema = db.getEdgesStructure();
+// E.g., prints: &quot;Label 'KNOWS': [since, weight]&quot;
+edgeSchema.forEach((label, props) -&gt; {
+    System.out.println(&quot;Label '&quot; + label + &quot;': &quot; + props);
+});
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../FullExample/" class="btn btn-neutral float-left" title="Workflow Example"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../FullExample/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
