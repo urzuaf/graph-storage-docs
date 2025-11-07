@@ -1,0 +1,8 @@
+site_name: GraphStorage
+nav:
+  - Home : index.md
+  - Get Started: Get_Started.md
+  - Workflow Example: FullExample.md 
+  - Documentation: FullDoc.md
+
+theme: readthedocs
