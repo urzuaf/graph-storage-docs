@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Get Started - GraphStorage</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Get Started";
+        var mkdocs_page_input_path = "Get_Started.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> GraphStorage
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Get Started</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#project-setup-maven">Project Setup (Maven)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#opening-and-closing-the-database">Opening and Closing the Database</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#ingesting-data">Ingesting Data</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#querying-data">Querying Data</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#single-entity-queries">Single Entity Queries</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#iterator-queries">Iterator Queries</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#querying-metadata">Querying Metadata</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../FullExample/">Workflow Example</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../FullDoc/">Documentation</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">GraphStorage</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Get Started</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="get-started-with-graphstorage">Get started with GraphStorage</h1>
+<p>Welcome to GraphStorage, an on-disk property graph storage library.</p>
+<p>This guide will walk you through adding the library to your project, opening a database, ingesting data from files, and performing basic queries.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>
+<p>Java 17 or higher.</p>
+</li>
+<li>
+<p>Maven.</p>
+</li>
+</ul>
+<h2 id="project-setup-maven">Project Setup (Maven)</h2>
+<p>First you need to clone the <a href="https://github.com/dbgutalca/graph-storage">github repo</a>.</p>
+<pre><code class="language-bash">git clone https://github.com/dbgutalca/graph-storage
+cd graph-storage
+</code></pre>
+<p>To use GraphStorage in your Maven project, you must first install the library to your local repository. Run the following command in the <code>graph-storage</code> directory:</p>
+<pre><code>mvn install
+</code></pre>
+<p>Once installed, you can add <code>GraphStorage</code> as a dependency in your other project's pom.xml:</p>
+<pre><code class="language-xml">&lt;dependency&gt;
+    &lt;groupId&gt;com.gdblab.graphstorage&lt;/groupId&gt; 
+    &lt;artifactId&gt;graphstorage&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt; 
+&lt;/dependency&gt;
+</code></pre>
+<h2 id="opening-and-closing-the-database">Opening and Closing the Database</h2>
+<p>The main entry point is the GraphStorage class. It implements AutoCloseable, so you should always use it within a try-with-resources block. This ensures that the database connection (and underlying RocksDB resources) are closed properly.</p>
+<pre><code class="language-java">import com.gdblab.graphstorage.GraphStorage;
+import com.gdblab.graphstorage.storage.Utils.GraphStorageException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+public class App {
+    public static void main(String[] args) {
+        // Define the path where the database will be stored
+        Path dbPath = Paths.get(&quot;./my-graph-db&quot;);
+
+        try (GraphStorage db = GraphStorage.open(dbPath)) {
+            // ... your database interaction code goes here ...
+            System.out.println(&quot;Database opened successfully at: &quot; + dbPath.toAbsolutePath());
+
+        } catch (GraphStorageException e) {
+            System.err.println(&quot;Error opening or using the database:&quot;);
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+<h2 id="ingesting-data">Ingesting Data</h2>
+<p>GraphStorage is optimized for bulk ingesting data from <code>.pgdf</code> files.</p>
+<p>Use the <code>insertNodesByFile</code> and <code>insertEdgesByFile</code> methods.</p>
+<pre><code class="language-java">try (GraphStorage db = GraphStorage.open(dbPath)) {
+
+    System.out.println(&quot;Ingesting nodes...&quot;);
+    db.insertNodesByFile(&quot;nodes.pgdf&quot;);
+
+    System.out.println(&quot;Ingesting edges...&quot;);
+    db.insertEdgesByFile(&quot;edges.pgdf&quot;);
+
+    System.out.println(&quot;Ingestion complete.&quot;);
+
+} 
+</code></pre>
+<h2 id="querying-data">Querying Data</h2>
+<p>The API provides two main ways to query: fetching single entities by ID and getting lazy iterators for collections of entities. The query methods return NodeBlob and EdgeBlob objects, which contain public fields for easy data access.</p>
+<h3 id="single-entity-queries">Single Entity Queries</h3>
+<p>You can get a specific node or edge if you know its unique ID.</p>
+<pre><code class="language-java">import com.gdblab.graphstorage.storage.NodeBlob;
+import com.gdblab.graphstorage.storage.EdgeBlob;
+
+//...
+
+// ... inside the try-with-resources block ...
+try {
+    // Get a single node by its ID
+    NodeBlob node = db.getNode(&quot;user_101&quot;);
+
+    if (node != null) {
+        System.out.println(&quot;Found node. Label: &quot; + node.label);
+        // Access properties directly from the 'props' map
+        System.out.println(&quot;Property 'name': &quot; + node.props.get(&quot;name&quot;));
+    } else {
+        System.out.println(&quot;Node with ID 'user_101' not found.&quot;);
+    }
+
+    // Get a single edge by its ID
+    EdgeBlob edge = db.getEdge(&quot;edge_50&quot;);
+    if (edge != null) {
+        System.out.println(&quot;Found edge. Label: &quot; + edge.label);
+        System.out.println(&quot;Source: &quot; + edge.src);
+        System.out.println(&quot;Target: &quot; + edge.dst);
+    }
+
+} catch (GraphStorageException e) {
+    e.printStackTrace();
+}
+
+</code></pre>
+<h3 id="iterator-queries">Iterator Queries</h3>
+<p>For queries that return multiple results (like neighbors, nodes by property, or all nodes), the API returns an AutoCloseableIterable.</p>
+<p>This is important! You must always use these iterators within a try-with-resources block to prevent resource leaks.</p>
+<p>The iterator returns NodeEntry or EdgeEntry objects. Use the .id() method to get the ID and the .blob() method to get the NodeBlob or EdgeBlob.</p>
+<pre><code class="language-java">// Example: Get all neighbors of node &quot;user_101&quot;
+
+System.out.println(&quot;Neighbors of 'user_101':&quot;);
+try (var neighbors = db.getNeighbours(&quot;user_101&quot;)) {
+
+    for (var edgeEntry : neighbors) {
+        EdgeBlob blob = edgeEntry.blob(); // Get the EdgeBlob
+
+        System.out.println(&quot;  - Edge ID: &quot; + edgeEntry.id());
+        System.out.println(&quot;    Label: &quot; + blob.label);
+        System.out.println(&quot;    Source: &quot; + blob.src);
+        System.out.println(&quot;    Target: &quot; + blob.dst);
+        System.out.println(&quot;    Weight: &quot; + blob.props.get(&quot;weight&quot;)); // Access props
+    }
+
+} catch (GraphStorageException e) {
+    e.printStackTrace();
+}
+
+// Example: Find nodes by a specific property
+System.out.println(&quot;Nodes with property 'country'='Chile':&quot;);
+try (var nodes = db.getNodesByPropertyEquals(&quot;country&quot;, &quot;Chile&quot;)) {
+
+    for (var nodeEntry : nodes) {
+        NodeBlob blob = nodeEntry.blob(); // Get the NodeBlob
+
+        System.out.println(&quot;  - Node ID: &quot; + nodeEntry.id());
+        System.out.println(&quot;    Label: &quot; + blob.label);
+        System.out.println(&quot;    Name: &quot; + blob.props.get(&quot;name&quot;));
+    }
+
+} catch (GraphStorageException e) {
+    e.printStackTrace();
+}
+</code></pre>
+<h2 id="querying-metadata">Querying Metadata</h2>
+<p>You can quickly retrieve counts and other schema-related information.</p>
+<pre><code class="language-java">
+try {
+    long nodeCount = db.getNodesQuantity();
+    long edgeCount = db.getEdgesQuantity();
+
+    System.out.println(&quot;Graph Metadata&quot;);
+    System.out.println(&quot;Total Nodes: &quot; + nodeCount);
+    System.out.println(&quot;Total Edges: &quot; + edgeCount);
+
+    var edgesByLabel = db.getEdgesQuantityByLabel();
+    System.out.println(&quot;Edge Counts by Label:&quot;);
+    edgesByLabel.forEach((label, count) -&gt; {
+        System.out.println(&quot;  - &quot; + label + &quot;: &quot; + count);
+    });
+
+} catch (GraphStorageException e) {
+    e.printStackTrace();
+}
+
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../FullExample/" class="btn btn-neutral float-right" title="Workflow Example">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../FullExample/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
